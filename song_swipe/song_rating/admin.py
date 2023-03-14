@@ -14,6 +14,6 @@ class SongAdmin(admin.ModelAdmin):
 
 @admin.register(SongStatus)
 class SongStatusAdmin(admin.ModelAdmin):
-    list_display = ["id", "song", "relation", "user"]
+    list_display = ["id", "song", "user"]
     list_filter = ["song__author"]
-    search_fields = ["song__name"]
+    search_fields = ["song_name"]
