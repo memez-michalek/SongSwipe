@@ -1,3 +1,4 @@
+from dj_rest_auth.registration.views import SocialAccountListView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -17,6 +18,13 @@ urlpatterns = [
     # User management
     path("users/", include("song_swipe.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
+    path("dj-rest-auth/", include("dj_rest_auth.urls")),
+    path(
+        "api/auth/social/accounts",
+        SocialAccountListView.as_view(),
+        name="social_account_list",
+    )
+    # path('social/', include('social_django.urls', namespace='social'))
     # Your stuff: custom urls includes go here
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -333,27 +333,53 @@ SPECTACULAR_SETTINGS = {
 }
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+
+SOCIAL_AUTH_SPOTIFY_KEY = env("SPOTIFY_CLIENT_ID")
+SOCIAL_AUTH_SPOTIFY_SECRET = env("SPOTIFY_CLIENT_SECRET")
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+
 # SPOTIFY PROVIDER SCOPE
 
 SOCIALACCOUNT_PROVIDERS = {
     "spotify": {
-        # For each OAuth based provider, either add a ``SocialApp``
-        # (``socialaccount`` app) containing the required client
-        # credentials, or list them here:
-        "APP": {
-            "scope": [
-                "user-library-read",
-                "user-library-modify",
-                "streaming",
-                "user-read-recently-played",
-                "user-read-private",
-            ],
-            "client_id": env("SPOTIFY_CLIENT_ID"),
-            "secret": env("SPOTIFY_CLIENT_SECRET"),
-        }
-    }
+        "SCOPE": ["user-read-email", "user-read-private", "user-library-read"],
+        "AUTH_PARAMS": {"auth_type": "reauthenticate"},
+        "METHOD": "oauth2",
+        "VERIFIED_EMAIL": False,
+        "VERSION": "1",
+        "PROVIDER_ID": "spotify",
+        "CLIENT_ID": env("SPOTIFY_CLIENT_ID"),
+        "SECRET": env("SPOTIFY_CLIENT_SECRET"),
+        "REDIRECT_URI": "http://localhost:8000/accounts/spotify/login/callback/",
+        "OPTIONS": {
+            "auth_params": {
+                "scope": "user-read-email,user-read-private,user-library-read",
+            },
+        },
+    },
 }
+
+SOCIAL_AUTH_PROVIDERS = {
+    "spotify": {
+        "AUTH_PARAMS": {"auth_type": "reauthenticate"},
+        "SCOPE": [
+            "user-read-email",
+            "user-read-private",
+            "user-library-read",
+        ],
+        "AUTHORIZATION_URL": "https://accounts.spotify.com/authorize",
+        "ACCESS_TOKEN_URL": "https://accounts.spotify.com/api/token",
+        "PROFILE_URL": "https://api.spotify.com/v1/me",
+        "CLIENT_ID": env("SPOTIFY_CLIENT_ID"),
+        "CLIENT_SECRET": env("SPOTIFY_CLIENT_SECRET"),
+        "REDIRECT_URI": "http://localhost:8000/accounts/spotify/login/callback/",
+    },
+}
+
+
+# ITS A MUST WHEN CREATING OAUTH AUTH WITH REST FRAMEWORK OTHERWISE YOU WON'T
+# BE ABLE TO GET ACCESS TOKENS FROM SOCIALTOKEN BECAUSE THEY WILL NOT BE SAVED
+SOCIALACCOUNT_STORE_TOKENS = True
 # https://stackoverflow.com/questions/15409366/django-socialapp-matching-query-does-not-exist
 SITE_ID = 1
-# changing site id to 2 instead of 1 randomly fixed the error ¯\_( ͡° ͜ʖ ͡°)_/¯
-# ALLOWED_REDIRECT_URIS = ["http://localhost:8000/accounts/spotify/login/callback/"]
