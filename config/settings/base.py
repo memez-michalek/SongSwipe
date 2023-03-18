@@ -343,7 +343,13 @@ SOCIAL_AUTH_JSONFIELD_ENABLED = True
 
 SOCIALACCOUNT_PROVIDERS = {
     "spotify": {
-        "SCOPE": ["user-read-email", "user-read-private", "user-library-read"],
+        "SCOPE": [
+            "user-read-email",
+            "user-read-private",
+            "user-library-read",
+            "user-top-read",
+            "user-library-modify",
+        ],
         "AUTH_PARAMS": {"auth_type": "reauthenticate"},
         "METHOD": "oauth2",
         "VERIFIED_EMAIL": False,
