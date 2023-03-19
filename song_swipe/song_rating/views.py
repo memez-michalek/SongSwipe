@@ -106,7 +106,7 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
         logging.critical(response)
 
         if response.status_code != 200:
-            return Response("Could not add selected track")
+            return Response("Could not add selected track", status=response.status_code)
 
         url = (
             "https://api.spotify.com/v1/recommendations"
@@ -131,7 +131,9 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
         logging.critical(response.text)
 
         if response.status_code != 200:
-            return Response("Could not recommend next track")
+            return Response(
+                "Could not recommend next track", status=response.status_code
+            )
 
         # RETRIEVE DATA FROM RESPONSE
         top_tracks = response.json()
@@ -145,6 +147,72 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
         track_id = first_top_track["id"]
         preview_url = first_top_track["preview_url"]
         images = first_top_track["album"]["images"]
+        genres = self.get_genre(artist_seed, access_token)
+
+        # SERIALIZE DATA OF NEXT RECOMMENDED SONG AND RETURN IT
+        serialized = SongSerializer(
+            {
+                "artist_seed": artist_seed,
+                "artist_name": artist_name,
+                "track_name": track_name,
+                "track_id": track_id,
+                "preview_url": preview_url,
+                "images": images,
+                "genres": genres,
+            }
+        )
+
+        return Response(data=serialized.data)
+
+
+# ONLY DELETES SONG FROM LIBRARY BECAUSE SPOTIFY HIDING VIA API IS IMPOSSIBLE
+class HateSongView(UtilsMixin, viewsets.GenericViewSet):
+    def retrieve(self, request, slug, *args, **kwargs):
+        # spotify_song_id = self.kwargs.get("spotify_song_id")
+        spotify_song_id = slug
+        access_token = SocialToken.objects.get(
+            app__provider="spotify", account__user=request.user
+        )
+        genres = request.query_params.get("genres")
+
+        response = requests.delete(
+            f"https://api.spotify.com/v1/me/tracks?ids={spotify_song_id}",
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": f"Bearer {access_token}",
+            },
+            params={
+                "mark": "false",
+            },
+        )
+        logging.critical(response)
+
+        if response.status_code != 200:
+            return Response(
+                "Could not block selected track", status=response.status_code
+            )
+
+        response = requests.get(
+            "https://api.spotify.com/v1/me/top/tracks",
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": f"Bearer {access_token}",
+            },
+        )
+        logging.critical(response)
+        if response.status_code != 200:
+            return Response("Error Found", status=response.status_code)
+
+        top_tracks = response.json()
+        first_track = top_tracks["items"][random.randint(0, 9)]
+
+        artist_seed = first_track["album"]["artists"][0]["id"]
+        artist_name = first_track["album"]["artists"][0]["name"]
+        track_name = first_track["name"]
+        track_id = first_track["id"]
+        preview_url = first_track["preview_url"]
+        images = first_track["album"]["images"]
         genres = self.get_genre(artist_seed, access_token)
 
         serialized = SongSerializer(

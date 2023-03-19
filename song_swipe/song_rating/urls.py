@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import GetFirstSongView, LikeSongView, SpotifyLogin
+from .views import GetFirstSongView, HateSongView, LikeSongView, SpotifyLogin
 
 app_name = "song_rating"
 
@@ -11,5 +11,10 @@ urlpatterns = [
         "like_song/<slug:slug>/",
         LikeSongView.as_view({"get": "retrieve"}),
         name="like_song",
+    ),
+    path(
+        "hate_song/<slug:slug>/",
+        HateSongView.as_view({"get": "retrieve"}),
+        name="hate_song",
     ),
 ]
