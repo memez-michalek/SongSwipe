@@ -349,6 +349,8 @@ SOCIALACCOUNT_PROVIDERS = {
             "user-library-read",
             "user-top-read",
             "user-library-modify",
+            "playlist-modify-public",
+            "playlist-modify-private",
         ],
         "AUTH_PARAMS": {"auth_type": "reauthenticate"},
         "METHOD": "oauth2",

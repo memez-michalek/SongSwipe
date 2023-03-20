@@ -25,6 +25,66 @@ class UtilsMixin:
 
         return response.json()["genres"]
 
+    def get_users_spotify_id(self, access_token):
+        response = requests.get(
+            "https://api.spotify.com/v1/me",
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": f"Bearer {access_token}",
+            },
+        )
+        if response.status_code != 200:
+            raise ValueError("responses status code is different than 200")
+
+        profile = response.json()
+        return profile["id"]
+
+    def add_song_to_playlist(self, access_token, playlist_id, track_uri):
+        response = requests.post(
+            f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?uris={track_uri}",
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": f"Bearer {access_token}",
+            },
+        )
+        if response.status_code != 200:
+            raise ValueError("responses status code is different than 200")
+
+        return True
+
+    def package_response(self, response, access_token, playlist_id):
+        top_tracks = response.json()
+        try:
+            first_track = top_tracks["items"][random.randint(0, 9)]
+        except KeyError:
+            first_track = top_tracks["tracks"][0]
+
+        artist_seed = first_track["album"]["artists"][0]["id"]
+        artist_name = first_track["album"]["artists"][0]["name"]
+        track_name = first_track["name"]
+        track_id = first_track["id"]
+        preview_url = first_track["preview_url"]
+        images = first_track["album"]["images"]
+        genres = self.get_genre(artist_seed, access_token)
+
+        if not self.add_song_to_playlist(
+            access_token, playlist_id, f"spotify:track:{track_id}"
+        ):
+            logging.critical("COULD NOT ADD SONG TO PLAYLIST")
+
+        serialized = SongSerializer(
+            {
+                "artist_seed": artist_seed,
+                "artist_name": artist_name,
+                "track_name": track_name,
+                "track_id": track_id,
+                "preview_url": preview_url,
+                "images": images,
+                "genres": genres,
+            }
+        )
+        return serialized
+
 
 class SpotifyLogin(SocialLoginView):
     adapter_class = SpotifyOAuth2Adapter
@@ -40,11 +100,36 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
 
         """
 
-        # app = SocialApp.objects.get(provider="spotify")
+        logging.critical(request.user)
         access_token = SocialToken.objects.get(
             app__provider="spotify", account__user=request.user
         )
-        logging.critical(access_token)
+
+        if (
+            request.user.users_playlist_id is None
+            or request.user.users_playlist_id == ""
+        ):
+            user_id = self.get_users_spotify_id(access_token)
+            response = requests.post(
+                f"https://api.spotify.com/v1/users/{user_id}/playlists",
+                headers={
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Authorization": f"Bearer {access_token}",
+                },
+                data={
+                    "name": "song_swipe_playlist",
+                    "description": "playlist created by songswipe",
+                    "public": True,
+                },
+            )
+            logging.critical(response)
+            if response.status_code != 200:
+                return Response(
+                    "could not create playlist", status=status.HTTP_404_NOT_FOUND
+                )
+
+            request.user.users_playlist_id = request.json()["id"]
+
         response = requests.get(
             "https://api.spotify.com/v1/me/top/tracks",
             headers={
@@ -56,29 +141,9 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
         if response.status_code != 200:
             return Response("Error Found", status=response.status_code)
 
-        top_tracks = response.json()
-        first_track = top_tracks["items"][random.randint(0, 9)]
-
-        artist_seed = first_track["album"]["artists"][0]["id"]
-        artist_name = first_track["album"]["artists"][0]["name"]
-        track_name = first_track["name"]
-        track_id = first_track["id"]
-        preview_url = first_track["preview_url"]
-        images = first_track["album"]["images"]
-        genres = self.get_genre(artist_seed, access_token)
-
-        serialized = SongSerializer(
-            {
-                "artist_seed": artist_seed,
-                "artist_name": artist_name,
-                "track_name": track_name,
-                "track_id": track_id,
-                "preview_url": preview_url,
-                "images": images,
-                "genres": genres,
-            }
+        serialized = self.package_response(
+            response, access_token, request.user.users_playlist_id
         )
-
         return Response(data=serialized.data)
 
 
@@ -94,6 +159,7 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
         )
         genres = request.query_params.get("genres")
         spotify_artist_id = request.query_params.get("spotify_artist_id")
+        spotify_playlist_id = request.user.users_playlist_id
 
         response = requests.put(
             f"https://api.spotify.com/v1/me/tracks?ids={spotify_song_id}",
@@ -136,32 +202,8 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
             )
 
         # RETRIEVE DATA FROM RESPONSE
-        top_tracks = response.json()
-        logging.critical(top_tracks)
-        first_top_track = top_tracks["tracks"][0]
-        logging.critical(first_top_track)
 
-        artist_seed = first_top_track["album"]["artists"][0]["id"]
-        artist_name = first_top_track["album"]["artists"][0]["name"]
-        track_name = first_top_track["name"]
-        track_id = first_top_track["id"]
-        preview_url = first_top_track["preview_url"]
-        images = first_top_track["album"]["images"]
-        genres = self.get_genre(artist_seed, access_token)
-
-        # SERIALIZE DATA OF NEXT RECOMMENDED SONG AND RETURN IT
-        serialized = SongSerializer(
-            {
-                "artist_seed": artist_seed,
-                "artist_name": artist_name,
-                "track_name": track_name,
-                "track_id": track_id,
-                "preview_url": preview_url,
-                "images": images,
-                "genres": genres,
-            }
-        )
-
+        serialized = self.package_response(response, access_token, spotify_playlist_id)
         return Response(data=serialized.data)
 
 
@@ -173,7 +215,8 @@ class HateSongView(UtilsMixin, viewsets.GenericViewSet):
         access_token = SocialToken.objects.get(
             app__provider="spotify", account__user=request.user
         )
-        genres = request.query_params.get("genres")
+        # genres = request.query_params.get("genres")
+        spotify_playlist_id = request.user.users_playlist_id
 
         response = requests.delete(
             f"https://api.spotify.com/v1/me/tracks?ids={spotify_song_id}",
@@ -181,9 +224,6 @@ class HateSongView(UtilsMixin, viewsets.GenericViewSet):
                 "Accept": "application/json",
                 "Content-Type": "application/json; charset=utf-8",
                 "Authorization": f"Bearer {access_token}",
-            },
-            params={
-                "mark": "false",
             },
         )
         logging.critical(response)
@@ -204,27 +244,5 @@ class HateSongView(UtilsMixin, viewsets.GenericViewSet):
         if response.status_code != 200:
             return Response("Error Found", status=response.status_code)
 
-        top_tracks = response.json()
-        first_track = top_tracks["items"][random.randint(0, 9)]
-
-        artist_seed = first_track["album"]["artists"][0]["id"]
-        artist_name = first_track["album"]["artists"][0]["name"]
-        track_name = first_track["name"]
-        track_id = first_track["id"]
-        preview_url = first_track["preview_url"]
-        images = first_track["album"]["images"]
-        genres = self.get_genre(artist_seed, access_token)
-
-        serialized = SongSerializer(
-            {
-                "artist_seed": artist_seed,
-                "artist_name": artist_name,
-                "track_name": track_name,
-                "track_id": track_id,
-                "preview_url": preview_url,
-                "images": images,
-                "genres": genres,
-            }
-        )
-
+        serialized = self.package_response(response, access_token, spotify_playlist_id)
         return Response(data=serialized.data)

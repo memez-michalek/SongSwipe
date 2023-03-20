@@ -1,11 +1,15 @@
 import logging
+from unittest.mock import patch
 
 import environ
 import requests
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.response import Response
 from spotipy.oauth2 import SpotifyOAuth
+
+from song_swipe.song_rating.views import UtilsMixin
 
 # from song_swipe.users.models import User
 
@@ -183,3 +187,74 @@ class TestHateView(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestUtilsMixin(TestCase):
+    def test_get_genre(self):
+        access_token = "12345"
+        artist_seed = "6vWDO969PvNqNYHIOW5v0m"
+        expected_response = ["pop", "pop rock"]
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.status_code = 200
+            mock_request.return_value.json.return_value = {"genres": expected_response}
+            response = UtilsMixin.get_genre(UtilsMixin(), artist_seed, access_token)
+        self.assertEqual(response, expected_response)
+
+    def test_get_genre_failed_request(self):
+        access_token = "12345"
+        artist_seed = "6vWDO969PvNqNYHIOW5v0m"
+        expected_response = Response(
+            "could not gather genre", status=status.HTTP_404_NOT_FOUND
+        )
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.status_code = 404
+            mock_request.return_value.json.return_value = {"genres": []}
+            response = UtilsMixin.get_genre(UtilsMixin(), artist_seed, access_token)
+        self.assertEqual(response.data, expected_response.data)
+        self.assertEqual(response.status_code, expected_response.status_code)
+
+    def test_get_users_spotify_id(self):
+        access_token = "12345"
+        expected_response = "spotifyuser1234"
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.status_code = 200
+            mock_request.return_value.json.return_value = {"id": expected_response}
+            response = UtilsMixin.get_users_spotify_id(UtilsMixin(), access_token)
+        self.assertEqual(response, expected_response)
+
+    def test_get_users_spotify_id_failed_request(self):
+        access_token = "12345"
+        expected_exception = ValueError("responses status code is different than 200")
+        with patch("requests.get") as mock_request:
+            mock_request.return_value.status_code = 404
+            mock_request.return_value.json.return_value = {}
+            with self.assertRaises(Exception) as context:
+                UtilsMixin.get_users_spotify_id(UtilsMixin(), access_token)
+            self.assertEqual(str(context.exception), str(expected_exception))
+
+    def test_add_song_to_playlist(self):
+        access_token = "12345"
+        playlist_id = "123"
+        track_uri = "spotify:track:1T7hUnFdDTjNFPXV37yOaB"
+        expected_response = True
+        with patch("requests.post") as mock_request:
+            mock_request.return_value.status_code = 200
+            mock_request.return_value.json.return_value = {}
+            response = UtilsMixin.add_song_to_playlist(
+                UtilsMixin(), access_token, playlist_id, track_uri
+            )
+        self.assertEqual(response, expected_response)
+
+    def test_add_song_to_playlist_failed_request(self):
+        access_token = "12345"
+        playlist_id = "123"
+        track_uri = "spotify:track:1T7hUnFdDTjNFPXV37yOaB"
+        expected_exception = ValueError("responses status code is different than 200")
+        with patch("requests.post") as mock_request:
+            mock_request.return_value.status_code = 404
+            mock_request.return_value.json.return_value = {}
+            with self.assertRaises(Exception) as context:
+                UtilsMixin.add_song_to_playlist(
+                    UtilsMixin(), access_token, playlist_id, track_uri
+                )
+            self.assertEqual(str(context.exception), str(expected_exception))
