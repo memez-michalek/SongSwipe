@@ -1,21 +1,18 @@
 import logo from './logo.svg';
 import './App.css';
 
-import queryString from "query-string";
-import { BrowserRouter, Route } from "react-router-dom"
-import SpotifyAuth from './Authentication';
-
-
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from "./Authentication";
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Route path="/authentication" element={SpotifyAuth}></Route>
-        <Route path="/callback" element={SpotifyAuth}></Route>
-      </BrowserRouter>
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/authentication" element={<LoginPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
-
 export default App;

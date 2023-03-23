@@ -1,32 +1,41 @@
+import React from 'react';
+import './LoginPage.css'; // import custom CSS file for styling
+import querystring from 'querystring';
+import process from 'process';
 
 
-import queryString from "query-string";
+const LoginPage = () => {
+  const handleSpotifyLogin = () => {
+
+    const scope = "user-read-email user-read-private user-library-read user-top-read user-library-modify playlist-modify-public playlist-modify-private"
+    const queryParams = querystring.stringify({
+        response_type: 'code',
+        client_id: process.env.REACT_APP_SPOTIFY_CLIENT_ID,
+        scope: scope,
+        redirect_uri:  process.env.REACT_APP_SPOTIFY_REDIRECT_URL,
+      })
+
+    const authorizeUrl = `https://accounts.spotify.com/authorize?${queryParams}`;
+    window.location = authorizeUrl
 
 
-function SpotifyAuth() {
-    const authenticate = () => {
-        const queries = {
-          response_type: "code",
-          client_id: "95ad54fe6e434ff8a74ac21ef37bef51",
-          scope: "user-read-email",
-          redirect_uri: "http://localhost:8000/api/spotify/"
-        };
-        window.location.assign(
-          `https://accounts.spotify.com/authorize?${queryString.stringify(queries)}`
-        );
-      };
+  };
 
-
-
-    return (
-      <div className="App">
-        <button
-        className="border-indigo-500/100 border-2 p-2 rounded"
-        onClick={authenticate}
-        >
-          Login via spotify
+  return (
+    <div className="login-container">
+      <div className="login-form-container">
+        <h1 className="login-header">Sign In to Spotify</h1>
+        <button className="spotify-button" onClick={handleSpotifyLogin}>
+          <img
+            className="spotify-icon"
+            src="https://img.icons8.com/color/48/000000/spotify--v1.png"
+            alt="Spotify Icon"
+          />
+          Connect with Spotify
         </button>
       </div>
-    );
-}
-export default SpotifyAuth
+    </div>
+  );
+};
+
+export default LoginPage;
