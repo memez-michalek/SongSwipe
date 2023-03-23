@@ -1,12 +1,16 @@
+import json
 import logging
 import random
 
 import requests
 from allauth.socialaccount.models import SocialToken
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from allauth.socialaccount.providers.spotify.views import SpotifyOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 from rest_framework import status, viewsets
 from rest_framework.response import Response
+
+from song_swipe.users.models import User
 
 from .serializers import SongSerializer
 
@@ -40,19 +44,37 @@ class UtilsMixin:
         return profile["id"]
 
     def add_song_to_playlist(self, access_token, playlist_id, track_uri):
-        response = requests.post(
-            f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?uris={track_uri}",
+        # check if song is already in playlist
+
+        response = requests.get(
+            f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks",
             headers={
                 "Content-Type": "application/json; charset=utf-8",
                 "Authorization": f"Bearer {access_token}",
             },
         )
-        if response.status_code != 200:
-            raise ValueError("responses status code is different than 200")
+        playlist_tracks = response.json()["items"]
+
+        # Extract track URIs
+        track_uris = [track["track"]["uri"] for track in playlist_tracks]
+
+        if track_uri in track_uris:
+            return False
+
+        response = requests.post(
+            f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks",
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": f"Bearer {access_token}",
+            },
+            json={"uris": [track_uri]},
+        )
+
+        response.raise_for_status()
 
         return True
 
-    def package_response(self, response, access_token, playlist_id):
+    def package_response(self, response, access_token):
         top_tracks = response.json()
         try:
             first_track = top_tracks["items"][random.randint(0, 9)]
@@ -66,11 +88,6 @@ class UtilsMixin:
         preview_url = first_track["preview_url"]
         images = first_track["album"]["images"]
         genres = self.get_genre(artist_seed, access_token)
-
-        if not self.add_song_to_playlist(
-            access_token, playlist_id, f"spotify:track:{track_id}"
-        ):
-            logging.critical("COULD NOT ADD SONG TO PLAYLIST")
 
         serialized = SongSerializer(
             {
@@ -88,7 +105,7 @@ class UtilsMixin:
 
 class SpotifyLogin(SocialLoginView):
     adapter_class = SpotifyOAuth2Adapter
-    # client_class = OAuth2Client
+    client_class = OAuth2Client
 
 
 class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
@@ -99,7 +116,7 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
         2 GET THE MOST RELATED SONG TO RECENTLY PLAYED SONG
 
         """
-
+        user = User.objects.get(id=request.user.id)
         logging.critical(request.user)
         access_token = SocialToken.objects.get(
             app__provider="spotify", account__user=request.user
@@ -110,25 +127,29 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
             or request.user.users_playlist_id == ""
         ):
             user_id = self.get_users_spotify_id(access_token)
+            logging.critical(user_id)
             response = requests.post(
                 f"https://api.spotify.com/v1/users/{user_id}/playlists",
                 headers={
                     "Content-Type": "application/json; charset=utf-8",
                     "Authorization": f"Bearer {access_token}",
                 },
-                data={
-                    "name": "song_swipe_playlist",
-                    "description": "playlist created by songswipe",
-                    "public": True,
-                },
+                data=json.dumps(
+                    {
+                        "name": "song_swipe_playlist",
+                        "description": "playlist created by songswipe",
+                        "public": True,
+                    }
+                ),
             )
-            logging.critical(response)
-            if response.status_code != 200:
+            if response.status_code != 201:
                 return Response(
                     "could not create playlist", status=status.HTTP_404_NOT_FOUND
                 )
 
-            request.user.users_playlist_id = request.json()["id"]
+            user.users_playlist_id = response.json()["id"]
+            user.save()
+            logging.critical(f"users playlist{user.users_playlist_id}")
 
         response = requests.get(
             "https://api.spotify.com/v1/me/top/tracks",
@@ -137,13 +158,12 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
                 "Authorization": f"Bearer {access_token}",
             },
         )
-        logging.critical(response)
+        # logging.critical(response.json())
         if response.status_code != 200:
             return Response("Error Found", status=response.status_code)
 
-        serialized = self.package_response(
-            response, access_token, request.user.users_playlist_id
-        )
+        serialized = self.package_response(response, access_token)
+
         return Response(data=serialized.data)
 
 
@@ -169,7 +189,6 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
                 "Authorization": f"Bearer {access_token}",
             },
         )
-        logging.critical(response)
 
         if response.status_code != 200:
             return Response("Could not add selected track", status=response.status_code)
@@ -183,9 +202,7 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
             f"&seed_tracks={spotify_song_id}"
         )
 
-        logging.critical(url)
-
-        response = requests.get(
+        recommended_tracks_response = requests.get(
             url,
             headers={
                 "Accept": "application/json",
@@ -193,17 +210,24 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
                 "Authorization": f"Bearer {access_token}",
             },
         )
-        logging.critical(response.status_code)
-        logging.critical(response.text)
 
-        if response.status_code != 200:
+        if recommended_tracks_response.status_code != 200:
             return Response(
-                "Could not recommend next track", status=response.status_code
+                "Could not recommend next track",
+                status=recommended_tracks_response.status_code,
             )
 
-        # RETRIEVE DATA FROM RESPONSE
+        track_uri = f"spotify:track:{spotify_song_id}"
+        logging.critical(track_uri)
+        # ADD SONG TO PLAYLIST
+        # logging.critical(f"playlist id {spotify_playlist_id}")
+        if not self.add_song_to_playlist(access_token, spotify_playlist_id, track_uri):
+            return Response(
+                data="Could not add song to playlist",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        serialized = self.package_response(response, access_token, spotify_playlist_id)
+        serialized = self.package_response(recommended_tracks_response, access_token)
         return Response(data=serialized.data)
 
 
@@ -216,7 +240,6 @@ class HateSongView(UtilsMixin, viewsets.GenericViewSet):
             app__provider="spotify", account__user=request.user
         )
         # genres = request.query_params.get("genres")
-        spotify_playlist_id = request.user.users_playlist_id
 
         response = requests.delete(
             f"https://api.spotify.com/v1/me/tracks?ids={spotify_song_id}",
@@ -226,7 +249,6 @@ class HateSongView(UtilsMixin, viewsets.GenericViewSet):
                 "Authorization": f"Bearer {access_token}",
             },
         )
-        logging.critical(response)
 
         if response.status_code != 200:
             return Response(
@@ -240,9 +262,8 @@ class HateSongView(UtilsMixin, viewsets.GenericViewSet):
                 "Authorization": f"Bearer {access_token}",
             },
         )
-        logging.critical(response)
         if response.status_code != 200:
             return Response("Error Found", status=response.status_code)
 
-        serialized = self.package_response(response, access_token, spotify_playlist_id)
+        serialized = self.package_response(response, access_token)
         return Response(data=serialized.data)
