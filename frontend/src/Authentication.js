@@ -1,13 +1,13 @@
 import React from 'react';
 import './LoginPage.css'; // import custom CSS file for styling
 import querystring from 'querystring';
-import process from 'process';
 
 
 const LoginPage = () => {
   const handleSpotifyLogin = () => {
 
     const scope = "user-read-email user-read-private user-library-read user-top-read user-library-modify playlist-modify-public playlist-modify-private"
+
     const queryParams = querystring.stringify({
         response_type: 'code',
         client_id: process.env.REACT_APP_SPOTIFY_CLIENT_ID,
@@ -20,7 +20,6 @@ const LoginPage = () => {
 
 
   };
-
   return (
     <div className="login-container">
       <div className="login-form-container">

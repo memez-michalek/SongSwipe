@@ -3,6 +3,7 @@ import './App.css';
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./Authentication";
+import Callback from "./Callback";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/authentication" element={<LoginPage />} />
+          <Route path="/callback" element={<Callback />} />
         </Routes>
       </div>
     </Router>
