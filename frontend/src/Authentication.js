@@ -1,23 +1,18 @@
 import React from 'react';
 import './LoginPage.css'; // import custom CSS file for styling
 import querystring from 'querystring';
+import randomstring from 'randomstring';
+import axios from 'axios';
 
 
 const LoginPage = () => {
   const handleSpotifyLogin = () => {
 
-    const scope = "user-read-email user-read-private user-library-read user-top-read user-library-modify playlist-modify-public playlist-modify-private"
-
-    const queryParams = querystring.stringify({
-        response_type: 'code',
-        client_id: process.env.REACT_APP_SPOTIFY_CLIENT_ID,
-        scope: scope,
-        redirect_uri:  process.env.REACT_APP_SPOTIFY_REDIRECT_URL,
-      })
-
-    const authorizeUrl = `https://accounts.spotify.com/authorize?${queryParams}`;
+    const authorizeUrl = "http://localhost:8000/accounts/spotify/login"
     window.location = authorizeUrl
 
+    //const resp = axios.get(authorizeUrl)
+    //console.log(resp)
 
   };
   return (

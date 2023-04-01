@@ -299,11 +299,11 @@ ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_ADAPTER = "song_swipe.users.adapters.AccountAdapter"
+# ACCOUNT_ADAPTER = "song_swipe.song_rating.adapters.CustomSpotifyOAuth2Adapter"
 # https://django-allauth.readthedocs.io/en/latest/forms.html
 ACCOUNT_FORMS = {"signup": "song_swipe.users.forms.UserSignupForm"}
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-SOCIALACCOUNT_ADAPTER = "song_swipe.users.adapters.SocialAccountAdapter"
+# SOCIALACCOUNT_ADAPTER = "song_swipe.users.adapters.SocialAccountAdapter"
 SOCIALACCOUNT_FORMS = {"signup": "song_swipe.users.forms.UserSocialSignupForm"}
 
 # django-rest-framework
@@ -335,14 +335,19 @@ SPECTACULAR_SETTINGS = {
 # ------------------------------------------------------------------------------
 
 
-SOCIAL_AUTH_SPOTIFY_KEY = env("SPOTIFY_CLIENT_ID")
-SOCIAL_AUTH_SPOTIFY_SECRET = env("SPOTIFY_CLIENT_SECRET")
+# SOCIAL_AUTH_SPOTIFY_KEY = env("SPOTIFY_CLIENT_ID")
+# SOCIAL_AUTH_SPOTIFY_SECRET = env("SPOTIFY_CLIENT_SECRET")
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 
 # SPOTIFY PROVIDER SCOPE
 
 SOCIALACCOUNT_PROVIDERS = {
     "spotify": {
+        "APP": {
+            "client_id": env("SPOTIFY_CLIENT_ID"),
+            "secret": env("SPOTIFY_CLIENT_SECRET"),
+            "key": "",
+        },
         "SCOPE": [
             "user-read-email",
             "user-read-private",
@@ -352,46 +357,20 @@ SOCIALACCOUNT_PROVIDERS = {
             "playlist-modify-public",
             "playlist-modify-private",
         ],
-        "AUTH_PARAMS": {"auth_type": "reauthenticate"},
+        "AUTH_PARAMS": {
+            "show_dialog": "false",
+        },
         "METHOD": "oauth2",
         "VERIFIED_EMAIL": False,
         "VERSION": "1",
-        "PROVIDER_ID": "spotify",
-        "CLIENT_ID": env("SPOTIFY_CLIENT_ID"),
-        "SECRET": env("SPOTIFY_CLIENT_SECRET"),
-        "REDIRECT_URI": "http://localhost:8000/accounts/spotify/login/callback/",
-        "OPTIONS": {
-            "auth_params": {
-                "scope": "user-read-email,user-read-private,user-library-read",
-            },
-        },
-    },
+    }
 }
-
-SOCIAL_AUTH_PROVIDERS = {
-    "spotify": {
-        "AUTH_PARAMS": {"auth_type": "reauthenticate"},
-        "SCOPE": [
-            "user-read-email",
-            "user-read-private",
-            "user-library-read",
-            "user-top-read",
-            "user-library-modify",
-            "playlist-modify-public",
-            "playlist-modify-private",
-        ],
-        "AUTHORIZATION_URL": "https://accounts.spotify.com/authorize",
-        "ACCESS_TOKEN_URL": "https://accounts.spotify.com/api/token",
-        "PROFILE_URL": "https://api.spotify.com/v1/me",
-        "CLIENT_ID": env("SPOTIFY_CLIENT_ID"),
-        "CLIENT_SECRET": env("SPOTIFY_CLIENT_SECRET"),
-        "REDIRECT_URI": "http://localhost:8000/accounts/spotify/login/callback/",
-    },
-}
-
 
 # ITS A MUST WHEN CREATING OAUTH AUTH WITH REST FRAMEWORK OTHERWISE YOU WON'T
 # BE ABLE TO GET ACCESS TOKENS FROM SOCIALTOKEN BECAUSE THEY WILL NOT BE SAVED
+# SOCIALACCOUNT_ADAPTER = 'song_swipe.song_rating.adapters.CustomSpotifyOAuth2Adapter'
+SITE_ID = 1
 SOCIALACCOUNT_STORE_TOKENS = True
 # https://stackoverflow.com/questions/15409366/django-socialapp-matching-query-does-not-exist
-SITE_ID = 1
+ACCOUNT_LOGOUT_ON_GET = True
+LOGIN_REDIRECT_URL = "http://localhost:3000/callback"
