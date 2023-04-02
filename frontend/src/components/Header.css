@@ -1,0 +1,17 @@
+.header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #f9f9f9;
+    font-family: 'Damion', cursive;
+}
+
+.header__image {
+    height: 40px;
+    object-fit: contain;
+}
+
+.headerIcons {
+    padding: 20px;
+    cursor: pointer;
+}

@@ -373,4 +373,4 @@ SITE_ID = 1
 SOCIALACCOUNT_STORE_TOKENS = True
 # https://stackoverflow.com/questions/15409366/django-socialapp-matching-query-does-not-exist
 ACCOUNT_LOGOUT_ON_GET = True
-LOGIN_REDIRECT_URL = "http://localhost:3000/callback"
+LOGIN_REDIRECT_URL = "http://localhost:3000/mainpage"

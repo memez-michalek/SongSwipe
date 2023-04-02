@@ -107,17 +107,6 @@ class SpotifyLogin(SocialLoginView):
     adapter_class = SpotifyOAuth2Adapter
     client_class = OAuth2Client
 
-    """
-    def get_app(self, request):
-        app = super().get_app(request)
-        # Customize the app object here if needed
-        return app
-
-    def get_redirect_url(self, request, socialaccount):
-
-        return "http://localhost:3000/"
-    """
-
 
 class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
     def list(self, request, *args, **kwargs):
@@ -133,14 +122,12 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
         access_token = SocialToken.objects.get(
             app__provider="spotify", account__user=request.user
         )
-        logging.critical(access_token)
 
         if (
             request.user.users_playlist_id is None
             or request.user.users_playlist_id == ""
         ):
             user_id = self.get_users_spotify_id(access_token)
-            logging.critical(user_id)
             response = requests.post(
                 f"https://api.spotify.com/v1/users/{user_id}/playlists",
                 headers={
@@ -162,7 +149,6 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
 
             user.users_playlist_id = response.json()["id"]
             user.save()
-            logging.critical(f"users playlist{user.users_playlist_id}")
 
         response = requests.get(
             "https://api.spotify.com/v1/me/top/tracks",
@@ -173,7 +159,6 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
         )
         # logging.critical(response.json())
         if response.status_code != 200:
-            logging.critical(response.json())
             return Response("Error Found", status=response.status_code)
 
         serialized = self.package_response(response, access_token)
