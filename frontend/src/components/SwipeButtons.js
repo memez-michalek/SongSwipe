@@ -7,18 +7,17 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 import { IconButton } from '@mui/material';
 import './SwipeButtons.css'
 
-const SwipeButtons = () => {
+const SwipeButtons = ({ handleSwipe}) => {
     return (
-        <div className='swipe__Button'>
-            <IconButton className='swipeButton__left'>
-                <CloseIcon fontSize='large' />
-            </IconButton>
-            <IconButton className='swipeButton__right'>
-                <FavoriteIcon fontSize='large' />
-            </IconButton>
-
-        </div>
-    )
-}
+      <div className="swipe__Button">
+        <IconButton className="swipeButton__left" onClick={(event) => handleSwipe(event)}>
+          <CloseIcon fontSize="large" />
+        </IconButton>
+        <IconButton className="swipeButton__right" onClick={(event) => handleSwipe(event)}>
+          <FavoriteIcon fontSize="large" />
+        </IconButton>
+      </div>
+    );
+  };
 
 export default SwipeButtons

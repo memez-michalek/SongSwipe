@@ -10,6 +10,7 @@ from dj_rest_auth.registration.views import SocialLoginView
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
+# from .adapters import MySocialAccountAdapter
 from song_swipe.users.models import User
 
 from .serializers import SongSerializer
@@ -24,6 +25,7 @@ class UtilsMixin:
                 "Authorization": f"Bearer {access_token}",
             },
         )
+
         if response.status_code != 200:
             return Response("could not gather genre", status=status.HTTP_404_NOT_FOUND)
 
@@ -87,8 +89,11 @@ class UtilsMixin:
         track_id = first_track["id"]
         preview_url = first_track["preview_url"]
         images = first_track["album"]["images"]
+        logging.critical(images)
+
         genres = self.get_genre(artist_seed, access_token)
 
+        logging.critical(genres)
         serialized = SongSerializer(
             {
                 "artist_seed": artist_seed,
@@ -100,6 +105,8 @@ class UtilsMixin:
                 "genres": genres,
             }
         )
+        logging.critical(serialized.data)
+
         return serialized
 
 
@@ -116,9 +123,7 @@ class GetFirstSongView(UtilsMixin, viewsets.GenericViewSet):
         2 GET THE MOST RELATED SONG TO RECENTLY PLAYED SONG
 
         """
-        logging.critical(f"REQUEST USER ID {request.user.id}")
         user = User.objects.get(id=request.user.id)
-        logging.critical(request.user)
         access_token = SocialToken.objects.get(
             app__provider="spotify", account__user=request.user
         )
@@ -217,14 +222,16 @@ class LikeSongView(UtilsMixin, viewsets.GenericViewSet):
             )
 
         track_uri = f"spotify:track:{spotify_song_id}"
-        logging.critical(track_uri)
         # ADD SONG TO PLAYLIST
         # logging.critical(f"playlist id {spotify_playlist_id}")
         if not self.add_song_to_playlist(access_token, spotify_playlist_id, track_uri):
+            logging.info("Could not add song to playlist")
+            """
             return Response(
                 data="Could not add song to playlist",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+            """
 
         serialized = self.package_response(recommended_tracks_response, access_token)
         return Response(data=serialized.data)

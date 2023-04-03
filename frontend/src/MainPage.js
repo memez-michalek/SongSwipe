@@ -7,7 +7,118 @@ import SwipeButtons from './components/SwipeButtons';
 
 function MainPage () {
   const [data, setData] = useState(null);
-    const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]);
+  const baseUrl = 'http://localhost:8000/api';
+    /*
+    const handleLeft = async (song) => {
+
+      try{
+
+        const endpoint = `hate_song/${song.track_id}/`;
+        const queryParams = new URLSearchParams({
+           spotify_artist_id: song.artist_seed,
+           genres: song.genres,
+        });
+        const url = `${baseUrl}/${endpoint}?${queryParams.toString()}`;
+
+        const response = await axios.get(
+          url,{
+            withCredentials : true
+        })
+
+        setData(response.data);
+        setImages(response.data.images.map(image => JSON.parse(image.replace(/'/g, '"'))));
+
+
+      }catch(err){
+        console.error(err)
+      }
+
+
+
+
+
+    };
+
+    const handleRight =  async (song) => {
+
+      try{
+        const endpoint = `like_song/${song.track_id}/`;
+        const queryParams = new URLSearchParams({
+          spotify_artist_id: song.artist_seed,
+          genres: song.genres,
+        });
+        const url = `${baseUrl}/${endpoint}?${queryParams.toString()}`;
+
+        const response = await axios.get(
+          url,{
+            withCredentials : true
+        })
+
+        setData(response.data);
+        setImages(response.data.images.map(image => JSON.parse(image.replace(/'/g, '"'))));
+
+
+      }catch(err){
+        console.error(err)
+      }
+
+
+    };
+    */
+
+
+    const handleSwipe = async (direction) => {
+      if (direction === "right") {
+        try{
+          const endpoint = `like_song/${data.track_id}/`;
+          const queryParams = new URLSearchParams({
+            spotify_artist_id: data.artist_seed,
+            genres: data.genres,
+          });
+          const url = `${baseUrl}/${endpoint}?${queryParams.toString()}`;
+
+          const response = await axios.get(
+            url,{
+              withCredentials : true
+          })
+
+          setData(response.data);
+          setImages(response.data.images.map(image => JSON.parse(image.replace(/'/g, '"'))));
+
+
+        }catch(err){
+          console.error(err)
+        }
+      } else if (direction === "left") {
+        try{
+          const endpoint = `hate_song/${data.track_id}/`;
+          const queryParams = new URLSearchParams({
+            spotify_artist_id: data.artist_seed,
+            genres: data.genres,
+          });
+          const url = `${baseUrl}/${endpoint}?${queryParams.toString()}`;
+
+          const response = await axios.get(
+            url,{
+              withCredentials : true
+          })
+
+          setData(response.data);
+          setImages(response.data.images.map(image => JSON.parse(image.replace(/'/g, '"'))));
+
+
+        }catch(err){
+          console.error(err)
+        }
+
+
+
+      }
+    };
+
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,8 +146,8 @@ function MainPage () {
   return(
     <div>
     <Header />
-    <Card data={data} images={images}/>
-    <SwipeButtons />
+    <Card data={data} images={images} handleSwipe={handleSwipe}/>
+    <SwipeButtons handleSwipe={handleSwipe} />
     </div>
   )
 }

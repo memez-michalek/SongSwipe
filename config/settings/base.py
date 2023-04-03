@@ -23,7 +23,7 @@ DEBUG = env.bool("DJANGO_DEBUG", False)
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
 # In Windows, this must be set to your system time zone.
-TIME_ZONE = "CET"
+TIME_ZONE = "Europe/Warsaw"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "en-us"
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
@@ -369,8 +369,10 @@ SOCIALACCOUNT_PROVIDERS = {
 # ITS A MUST WHEN CREATING OAUTH AUTH WITH REST FRAMEWORK OTHERWISE YOU WON'T
 # BE ABLE TO GET ACCESS TOKENS FROM SOCIALTOKEN BECAUSE THEY WILL NOT BE SAVED
 # SOCIALACCOUNT_ADAPTER = 'song_swipe.song_rating.adapters.CustomSpotifyOAuth2Adapter'
-SITE_ID = 1
+SITE_ID = 3
 SOCIALACCOUNT_STORE_TOKENS = True
 # https://stackoverflow.com/questions/15409366/django-socialapp-matching-query-does-not-exist
 ACCOUNT_LOGOUT_ON_GET = True
 LOGIN_REDIRECT_URL = "http://localhost:3000/mainpage"
+ACCOUNT_EMAIL_VERIFICATION = None
+SOCIALACCOUNT_ADAPTER = "song_swipe.song_rating.adapters.CustomSocialAccountAdapter"
