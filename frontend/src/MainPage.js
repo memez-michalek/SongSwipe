@@ -69,6 +69,7 @@ function MainPage () {
 
 
     const handleSwipe = async (direction) => {
+      console.log(direction)
       if (direction === "right") {
         try{
           const endpoint = `like_song/${data.track_id}/`;
@@ -77,7 +78,7 @@ function MainPage () {
             genres: data.genres,
           });
           const url = `${baseUrl}/${endpoint}?${queryParams.toString()}`;
-
+          console.log(url);
           const response = await axios.get(
             url,{
               withCredentials : true
@@ -123,8 +124,9 @@ function MainPage () {
     useEffect(() => {
         const fetchData = async () => {
           try {
-            const response = await axios.get('http://localhost:8000/api/song',{
-                withCredentials : true
+            const response = await axios.get('http://localhost:8000/api/song/',{
+                withCredentials : true,
+
             });
             setData(response.data);
             setImages(response.data.images.map(image => JSON.parse(image.replace(/'/g, '"'))));

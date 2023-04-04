@@ -14,7 +14,7 @@ function Card(props) {
     // Trigger the "play" method on the Spotify iframe's audio element
 
 
-
+  {console.log(props)}
   return (
     <div>
       <div className="card__container">
@@ -24,8 +24,8 @@ function Card(props) {
           <TinderCard
             className="swipe"
           preventSwipe={["up", "down"]}
-          onSwipe={props.handleSwipe}
-          onCardLeftScreen={(direction) => props.handleSwipe(direction)}
+          onSwipe={(direction) => props.handleSwipe(direction)}
+          /*onCardLeftScreen={(direction) => props.handleSwipe(direction)}*/
 
 
           >

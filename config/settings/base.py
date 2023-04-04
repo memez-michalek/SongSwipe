@@ -376,3 +376,28 @@ ACCOUNT_LOGOUT_ON_GET = True
 LOGIN_REDIRECT_URL = "http://localhost:3000/mainpage"
 ACCOUNT_EMAIL_VERIFICATION = None
 SOCIALACCOUNT_ADAPTER = "song_swipe.song_rating.adapters.CustomSocialAccountAdapter"
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+
+CORS_ORIGIN_WHITELIST = (
+    "http://localhost:3000",  # for localhost (REACT Default)
+    "http://localhost:8000",  # for localhost (Developlemt)
+)
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",  # for localhost (REACT Default)
+    "http://localhost:8000",  # for localhost (Developlemt)
+]
