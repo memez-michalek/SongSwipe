@@ -17,6 +17,8 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost:3000",
     "http://localhost:3000/",
+    "http://127.0.0.1:3000/",
+    "172.19.0.1",
 ]
 
 # CACHES
@@ -24,10 +26,21 @@ ALLOWED_HOSTS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#caches
 CACHES = {
     "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://song_swipe_local_redis:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+
+"""
+    "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "",
     }
-}
+"""
 
 # EMAIL
 # ------------------------------------------------------------------------------
@@ -66,3 +79,4 @@ INSTALLED_APPS += ["django_extensions"]  # noqa F405
 CELERY_TASK_EAGER_PROPAGATES = True
 # Your stuff...
 # ------------------------------------------------------------------------------
+TIMEOUT = 120

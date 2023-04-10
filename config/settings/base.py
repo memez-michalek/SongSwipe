@@ -374,8 +374,13 @@ SOCIALACCOUNT_STORE_TOKENS = True
 # https://stackoverflow.com/questions/15409366/django-socialapp-matching-query-does-not-exist
 ACCOUNT_LOGOUT_ON_GET = True
 LOGIN_REDIRECT_URL = "http://localhost:3000/mainpage"
+
+
 ACCOUNT_EMAIL_VERIFICATION = None
+
 SOCIALACCOUNT_ADAPTER = "song_swipe.song_rating.adapters.CustomSocialAccountAdapter"
+
+"""
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -389,15 +394,36 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "access-control-allow-headers",
+    "access-control-allow-methods",
 ]
+
 
 
 CORS_ORIGIN_WHITELIST = (
     "http://localhost:3000",  # for localhost (REACT Default)
     "http://localhost:8000",  # for localhost (Developlemt)
+    "http://172.18.0.2:3000"
 )
 
+
+
+
 CSRF_TRUSTED_ORIGINS = [
+    "http://0.0.0.0:3000",
+    "http://0.0.0.0:8000",
     "http://localhost:3000",  # for localhost (REACT Default)
     "http://localhost:8000",  # for localhost (Developlemt)
 ]
+"""
+
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ORIGIN_WHITELIST = [    'http://localhost:3000', 'http://172.19.0.1:3000']
+# CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True

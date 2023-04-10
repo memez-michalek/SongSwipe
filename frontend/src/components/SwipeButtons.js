@@ -10,10 +10,10 @@ import './SwipeButtons.css'
 const SwipeButtons = ({ handleSwipe}) => {
     return (
       <div className="swipe__Button">
-        <IconButton className="swipeButton__left" onClick={(event) => handleSwipe(event)}>
+        <IconButton className="swipeButton__left" onClick={() => handleSwipe('left')}>
           <CloseIcon fontSize="large" />
         </IconButton>
-        <IconButton className="swipeButton__right" onClick={(event) => handleSwipe(event)}>
+        <IconButton className="swipeButton__right" onClick={() => handleSwipe('right')}>
           <FavoriteIcon fontSize="large" />
         </IconButton>
       </div>

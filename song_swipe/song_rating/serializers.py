@@ -19,3 +19,7 @@ class SongSerializer(serializers.Serializer):
         model = Song
         fields = ['id', 'spotify_id', 'name', 'author']
     """
+
+
+class SongListSerializer(serializers.Serializer):
+    songs = SongSerializer(many=True)
