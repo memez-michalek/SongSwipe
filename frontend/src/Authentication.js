@@ -1,13 +1,17 @@
 import React from 'react';
 import './App.css'; // import custom CSS file for styling
+import Cookies from 'js-cookie';
 
 const LoginPage = () => {
+  const sessionid = Cookies.get('sessionid');
   const handleSpotifyLogin = () => {
 
     const authorizeUrl = "http://localhost:8000/accounts/spotify/login"
     window.location = authorizeUrl
 
   };
+
+
   return (
     <div className="LoginPage" style={{background: 'linear-gradient(to right, #FFC371, #FF5F6D)',}}>
     <div className="login-container">

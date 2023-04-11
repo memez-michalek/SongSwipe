@@ -380,42 +380,6 @@ ACCOUNT_EMAIL_VERIFICATION = None
 
 SOCIALACCOUNT_ADAPTER = "song_swipe.song_rating.adapters.CustomSocialAccountAdapter"
 
-"""
-
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-    "access-control-allow-headers",
-    "access-control-allow-methods",
-]
-
-
-
-CORS_ORIGIN_WHITELIST = (
-    "http://localhost:3000",  # for localhost (REACT Default)
-    "http://localhost:8000",  # for localhost (Developlemt)
-    "http://172.18.0.2:3000"
-)
-
-
-
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://0.0.0.0:3000",
-    "http://0.0.0.0:8000",
-    "http://localhost:3000",  # for localhost (REACT Default)
-    "http://localhost:8000",  # for localhost (Developlemt)
-]
-"""
 
 # CORS_ALLOW_CREDENTIALS = True
 # CORS_ORIGIN_WHITELIST = [    'http://localhost:3000', 'http://172.19.0.1:3000']

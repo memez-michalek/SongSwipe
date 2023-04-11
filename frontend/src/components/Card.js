@@ -15,6 +15,7 @@ function Card(props) {
 
 
   {console.log(props)}
+  {console.log(props.data.images[0].url)}
   return (
     <div>
       <div className="card__container">
@@ -30,8 +31,11 @@ function Card(props) {
 
           >
             <div
-              style={{ backgroundImage: `url(${props.images[0].url})` }}
+              style={{
+                backgroundImage: props.data.images ? `url(${props.data.images[0].url})` : "",
+              }}
               className="card"
+
             >
 
             <iframe
